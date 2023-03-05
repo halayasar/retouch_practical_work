@@ -1,0 +1,164 @@
+from utils import mhd
+from utils.slice_op import hist_match
+import os
+import numpy as np
+import pandas as pd
+from PIL import Image
+from PIL import ImageFilter
+import platform
+import matplotlib.pyplot as plt
+from skimage.morphology import disk, rectangle
+from skimage.filters.rank import median
+import matplotlib.pyplot as plt
+from nutsml import *
+from nutsflow import *
+from tqdm import tqdm
+
+DATA_ROOT = r"C:\Users\ASUS\Desktop\7ala - AI\Seminar in AI\Data\Train2\\"
+
+IRF_CODE = 1
+SRF_CODE = 2
+PED_CODE = 3
+
+def preprocess_oct_images():
+    # reference image for histogram matching (random from Spectralis dataset)
+    filepath_r = r'C:\Users\ASUS\Desktop\7ala - AI\Seminar in AI\Data\Train2\Spectralis\TRAIN028\oct.mhd'
+    oct_r, _, _ = mhd.load_oct_image(filepath_r)
+
+    image_names = list()
+    for subdir, dirs, files in os.walk(DATA_ROOT):
+        for file in files:
+            filepath = subdir + os.sep + file
+            # print(filepath)
+
+            if filepath.endswith("reference.mhd"):
+                image_name = filepath.split('\\')[-2]
+                vendor = filepath.split('\\')[-3]
+                img, _, _ = mhd.load_oct_seg(filepath)
+                num_slices = img.shape[0]
+                for slice_num in range(0, num_slices):
+                    im_slice = img[slice_num, :, :]
+                    image_names.append([image_name, vendor, subdir, slice_num, int(np.any(im_slice == IRF_CODE)),
+                                        int(np.any(im_slice == SRF_CODE)), int(np.any(im_slice == PED_CODE))])
+                    im_slice = Image.fromarray(im_slice, mode='L')
+
+                    save_name = DATA_ROOT + '\\pre_processed\\oct_masks\\' + vendor + '_' + image_name + '_' + str(
+                        slice_num).zfill(
+                        3) + '.tiff'
+                    im_slice.save(save_name)
+
+            elif filepath.endswith("oct.mhd"):
+                image_name = filepath.split('\\')[-2]
+                vendor = filepath.split('\\')[-3]
+                img, _, _ = mhd.load_oct_image(filepath)
+                if 'Cirrus' in vendor:
+                    img = hist_match(img, oct_r)
+                elif 'Topcon' in vendor:
+                    img = hist_match(img, oct_r)
+                num_slices = img.shape[0]
+
+                for slice_num in range(0, num_slices):
+                    if 'Cirrus' in vendor and (slice_num > 0) and (slice_num < num_slices - 1):
+                        im_slice = np.median(img[slice_num - 1:slice_num + 2, :, :].astype(np.int32), axis=0).astype(
+                            np.int32)
+                    if 'Topcon' in vendor and (slice_num > 0) and (slice_num < num_slices - 1):
+                        im_slice = np.median(img[slice_num - 1:slice_num + 2, :, :].astype(np.int32), axis=0).astype(
+                            np.int32)
+                    else:
+                        im_slice = img[slice_num, :, :].astype(np.int32)
+                    im_slice = Image.fromarray(im_slice, mode='I')
+
+                    if 'Cirrus' in vendor:
+                        im_slice = im_slice.filter(ImageFilter.MedianFilter(size=3))
+                    elif 'Topcon' in vendor:
+                        im_slice = im_slice.filter(ImageFilter.MedianFilter(size=3))
+
+                    save_name = DATA_ROOT + '\\pre_processed\\oct_imgs\\' + vendor + '_' + image_name + '_' + str(
+                        slice_num).zfill(3) + '.tiff'
+                    im_slice.save(save_name)
+
+    col_names = ['image_name', 'vendor', 'root', 'slice', 'is_IRF', 'is_SRF', 'is_PED']
+    df = pd.DataFrame(image_names, columns=col_names)
+    df.to_csv(DATA_ROOT + '\\pre_processed\\slice_gt.csv', index=False)
+
+
+def create_test_train_set():
+    DATA_ROOT = r"C:\Users\ASUS\Desktop\7ala - AI\Seminar in AI\Data\Train2"
+    train_file = DATA_ROOT + '\pre_processed\slice_gt.csv'
+    data = pd.read_csv(train_file)
+    case_names = data.iloc[:,:3]
+
+    from sklearn.model_selection import train_test_split
+    train_cases, test_cases = train_test_split(case_names, test_size=0.25)
+
+    train_cases = train_cases.iloc[:,2]
+    test_cases = test_cases.iloc[:,2]  
+
+    train = pd.DataFrame(train_cases)
+    train.to_csv(DATA_ROOT + '\outputs\train_data.csv', index = False)
+
+    test = pd.DataFrame(test_cases)
+    test.to_csv(DATA_ROOT + '\outputs\test_data.csv', index = False)   
+
+
+def create_roi_masks(tresh=1e-2):
+    import skimage.io as sio
+    import skimage
+    from skimage.morphology import disk, rectangle, closing, opening, binary_closing, convex_hull_image
+    from skimage.filters.rank import entropy
+
+    MASK_PATH = r"C:\Users\ASUS\Desktop\7ala - AI\Seminar in AI\Data\Train2\pre_processed\oct_masks\\"
+
+    image_names = list()
+    for subdir, dirs, files in os.walk(DATA_ROOT + '\pre_processed\oct_imgs'):
+        for file in files:
+            filepath = subdir + os.sep + file
+            if filepath.endswith(".tiff"):
+                image_name = filepath.split('\\')[-1]
+                image_names.append([filepath, image_name])
+
+    for filepath, image_name in tqdm(image_names):
+        # print(filepath, image_name)
+        # if 'Cirrus' not in image_name:
+        # print(image_name)
+        img = sio.imread(filepath)
+        im_mask = sio.imread(MASK_PATH + image_name)
+        im_mask = im_mask.astype(np.int8)
+        im_slice = skimage.img_as_float(img.astype(np.float32) / 128. - 1.)
+
+        # detect subtle variations in the local gray level distribution, disk to create a circular structuring element
+        im_slice_ = entropy(im_slice, disk(15))
+        # normalization
+        im_slice_ = im_slice_ / (np.max(im_slice_) + 1e-16)
+        im_slice_ = np.asarray(im_slice_ > tresh, dtype=np.int8)
+
+        # compares the values of inputs & returns value if either of the operands has the value 1
+        im_slice_ = np.bitwise_or(im_slice_,im_mask)
+        selem = disk(55)
+        im_slice_ = binary_closing(im_slice_, selem=selem)
+
+        h, w = im_slice_.shape
+        rnge = list()
+        for x in range(0, w):
+            col = im_slice_[:, x]
+            col = np.nonzero(col)[0]
+            # print col, col.shape
+            if len(col) > 0:
+                y_min = np.min(col)
+                y_max = np.max(col)
+                rnge.append(int((float(y_max) - y_min)/h*100.))
+                im_slice_[y_min:y_max, x] = 1
+        if len(rnge) > 0:
+            print(image_name, np.max(rnge))
+        else:
+            print(image_name, "**************")
+
+        im_slice_ = Image.fromarray(im_slice_, mode='L')
+        save_name = DATA_ROOT + '\\pre_processed\\roi_masks\\' + image_name
+        im_slice_.save(save_name)
+
+if __name__ == "__main__":
+    preprocess_oct_images()
+    create_roi_masks()
+    create_test_train_set()
+
