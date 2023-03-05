@@ -23,3 +23,24 @@ The script consists of two functions: "sample_oct_patch_centers" and "sample_pat
 "sample_patches_entropy_mask" takes as input an OCT image, a corresponding segmentation ground truth mask, an OCT region of interest mask, a patch shape, the number of positive and negative patches to extract, and values to indicate a positive and a negative label. It yields patches of the OCT image, the corresponding mask patch, and labels indicating the presence or absence of IRF, SRF, and PED within the patch.
 
 Both functions are used in a pipeline for generating image patches where patches are extracted from the OCT image according to a binary mask. The script defines the "ImagePatchesByMaskRetouch_resampled" function, which is a Nut processor (using nutsml library) that applies "sample_patches_retouch_mask" to an iterable of images, masks, and labels to yield image patches, mask patches, and labels for IRF, SRF, and PED.
+
+##### data_prepare.py
+This script defines several functions to create a data iterator for training the model on OCT images. Data is rotated and patches are dropped randomly from the iterator if it does not contain any pathology. Images are preprocessed by subtracting the mean of the pixel values and dividing by the standard deviation. "get_iterator_nuts" function creates an iterator that reads OCT images, their corresponding masks, and their ROI masks from given directories. It also applies various augmentations to the input data and returns a batch of training data.
+
+"get_data_iterator" function creates a data iterator that reads data from a CSV file, stratifies it according to the label distribution, shuffles it, applies various augmentations, randomly crops a patch from each image, preprocesses it, and filters it based on whether it contains any invalid pixels. The build_batch_train function is then used to construct batches of data for training.
+
+#### Model 
+This script defines functions to create an instance of the U-Net model, a convolutional neural network used for image segmentation tasks. The model consists of an encoder, which downsamples the input image to extract features, and a decoder, which upsamples the feature map to generate a segmentation map with the same size as the input image.
+
+The "create_encoder_layer" function defines a single layer of the encoder, which includes convolutional and batch normalization layers. If it is the first layer of the encoder, a 7x7 convolutional layer is used to process the input image. Otherwise, a max pooling layer is used to downsample the feature map.
+
+The "create_decoder_layer" function defines a single layer of the decoder, which includes a deconvolutional layer, a concatenation layer that merges the feature map from the corresponding encoder layer, and a convolutional layer. Spatial dropout and batch normalization layers can be included in the decoder. Cropping is performed on the encoder feature map to ensure that it has the same size as the upsampled decoder feature map.
+
+The "create_unet_model" function creates an instance of the U-Net model with a specific architecture. The model includes four encoder layers and three decoder layers. The first decoder layer has the smallest size, while the last decoder layer has the same size as the input image. The decoder layers also include additional upsampling and cropping layers to match the size of the encoder feature map. The model takes an input image of size (224, 224, 3) and produces a segmentation map with the same size. The regularizer_type and regularizer_weight parameters control the use and strength of L2 regularization. The activation parameter controls the activation function used in the convolutional and activation layers. The TRAIN_CLASSES parameter is not used in the script.
+
+#### loss_functions.py
+This script defines three functions to compute loss functions for a neural network. "get_dice_loss" function returns the Dice loss for binary segmentation tasks. The function calculates true positive, false positive and false negative rates, and returns the Dice loss which is a measure of how similar the predicted segmentation map is to the true segmentation map.
+
+"get_balanced_cross_entropy_loss_function" is a function that calculates the cross-entropy loss, which is a commonly used loss function for classification tasks. The function returns the average loss over all classes. "get_combined_cross_entropy_and_dice_loss_function" is a function that computes the combined loss of Dice loss and cross-entropy loss. 
+
+#### train.py
