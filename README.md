@@ -50,7 +50,7 @@ f
 d
 
 ### Model outputs 
-<img src="https://user-images.githubusercontent.com/92387828/222973538-556f5b9b-16a1-4894-8a10-c5253e1fae00.png" width=80% height=80%>
-<img src="https://user-images.githubusercontent.com/92387828/222973534-ef74072c-5475-4118-95b5-66fee341539e.png" width=80% height=80%>
+<img src="https://user-images.githubusercontent.com/92387828/222973538-556f5b9b-16a1-4894-8a10-c5253e1fae00.png" width=20% height=20%>
+<img src="https://user-images.githubusercontent.com/92387828/222973534-ef74072c-5475-4118-95b5-66fee341539e.png" width=20% height=20%>
 
 ### Model Evaluation
