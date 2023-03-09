@@ -43,15 +43,17 @@ This script defines three functions to compute loss functions for a neural netwo
 
 "get_balanced_cross_entropy_loss_function" is a function that calculates the cross-entropy loss, which is a commonly used loss function for classification tasks. The function returns the average loss over all classes. "get_combined_cross_entropy_and_dice_loss_function" is a function that computes the combined loss of Dice loss and cross-entropy loss. 
 
+#### model_training.py
+d
+
 #### adversarial_training.py
 f
 
-#### model_training.py
-d
+### Model Evaluation
+k
 
 ### Model outputs 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/92387828/222973538-556f5b9b-16a1-4894-8a10-c5253e1fae00.png" width=20% height=20%> <img src="https://user-images.githubusercontent.com/92387828/222973534-ef74072c-5475-4118-95b5-66fee341539e.png" width=20% height=20%>
 </p>
 
-### Model Evaluation
