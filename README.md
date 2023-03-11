@@ -45,10 +45,10 @@ This script defines three functions to compute loss functions for a neural netwo
 
 "get_balanced_cross_entropy_loss_function" is a function that calculates the cross-entropy loss, which is a commonly used loss function for classification tasks. The function returns the average loss over all classes. "get_combined_cross_entropy_and_dice_loss_function" is a function that computes the combined loss of Dice loss and cross-entropy loss. 
 
-#### model_training.py
+#### train_model.py
 This script carries out training of the segmentation model. The training is done for 100 epochs with the IOU Score and F Score as metrics. All model weights are saved and the best weight is named appropriately. The folder containing all the weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
-#### adversarial_training.py
+#### train_adversarial.py
 This script carries out GAN training. The best segmentation model weight is loaded and used in the training. The GAN model is trained with each epoch involving training the generator and discriminator alternately, with batches of real and fake images. The generator attempts to create realistic fake images, and the discriminator tries to distinguish between the real and fake images. This process is repeated for multiple epochs until the discriminator can no longer distinguish between the real and fake images. As the segmentation model (generator) is trained, the weights are also saved in a separate folder for the adversarial weights. All generator weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Model Evaluation
@@ -57,7 +57,7 @@ Again, the best segmentation model weight is loaded and used to evaluate the mod
 Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Model outputs 
-#### test.py
+#### test_model.py
 The testing script takes in the OCT scan as input and outputs a segmentation mask for the input image. The radius of the circular crop of the image is found and preprocessing is performed on the image (similar to that done on training dataset). Afterwards, the output of the segmentation model is used to set the class with the highest probability as the predicted class. Then, thresholding is performed to the probabilities based on a threshold value of 0.5 and returns a binary mask.
 The script then uses an image, crops it into smaller patches, and passes each patch through prediction function to get a binary mask for that patch. It then combines the binary masks for each patch to get the final segmentation mask for the whole image. Image overlays are also produced. Some overlays are seen below: 
 
