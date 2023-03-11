@@ -53,6 +53,8 @@ This script carries out GAN training. The best segmentation model weight is load
 ### Model Evaluation
 Again, the best segmentation model weight is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the IOU Score and F Score as metrics.
 
+Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
+
 ### Model outputs 
 #### test.py
 The testing script takes in the OCT scan as input and outputs a segmentation mask for the input image. The radius of the circular crop of the image is found and preprocessing is performed on the image (similar to that done on training dataset). Afterwards, the output of the segmentation model is used to set the class with the highest probability as the predicted class. Then, thresholding is performed to the probabilities based on a threshold value of 0.5 and returns a binary mask.
@@ -61,5 +63,7 @@ The script then uses an image, crops it into smaller patches, and passes each pa
 <p align="center">
   <img src="https://user-images.githubusercontent.com/92387828/222973538-556f5b9b-16a1-4894-8a10-c5253e1fae00.png" width=20% height=20%> <img src="https://user-images.githubusercontent.com/92387828/222973534-ef74072c-5475-4118-95b5-66fee341539e.png" width=20% height=20%>
 </p>
+
+All predicted outputs can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Results
