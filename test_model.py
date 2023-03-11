@@ -199,7 +199,6 @@ def create_overlay(img, seg, n_classes=config.N_CLASSES):
   return overlay  
 
 
-# ********************************************************************************
 
 
 reference_im_path = os.path.join(r"C:\Users\ASUS\Desktop\7ala - AI\Seminar in AI\Data\Train2\Spectralis", "TRAIN028", "oct.mhd")
@@ -209,15 +208,15 @@ threshold = 0.5
 OVERLAY=True
 
 if __name__=="__main__":
-    # script handles test images without preprocessing
+    # ********************************************************************************
+    # script handles test images without preprocessing, need to run it separately for every vendor folder
+
     # input_path = r"C:\Users\ASUS\Downloads\code1.1\Test\Topcon"
     # input_path = r"C:\Users\ASUS\Downloads\code1.1\Test\Cirrus"
     input_path = r"C:\Users\ASUS\Downloads\code1.1\Test\Spectralis"
 
     output_fol = r"C:\Users\ASUS\Downloads\code1.1\output"
-
     weight_path = r"C:\Users\ASUS\Downloads\code1.1\weights\best_weight.h5"
-    # weight_path = r"C:\Users\ASUS\Downloads\code2.0\weights\model_ep_89.h5"
 
     H, W = config.PATCH_SIZE_H, config.PATCH_SIZE_W
 
