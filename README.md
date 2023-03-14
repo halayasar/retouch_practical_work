@@ -79,3 +79,4 @@ The script then uses an image, crops it into smaller patches, and passes each pa
 All predicted outputs can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Results
+The results will be shown later. 
