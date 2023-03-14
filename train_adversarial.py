@@ -29,10 +29,20 @@ from keras.layers import Cropping2D
 from keras.regularizers import l2
 from utils.data_prepare import get_iterator_nuts, get_data_iterator, read_csv_data
 import keras.backend as K
+from time import time
+import csv
 
 from utils.metrics import IOUScore, FScore
 from model_utils.loss_functions import get_combined_cross_entropy_and_dice_loss_function,process_loss_fn_inputs
 from model_utils.model import create_unet_model
+
+# ***********************************************
+
+train_csv_data_path= r'C:\Users\ASUS\Downloads\code1.1\train_data.csv'
+val_csv_data_path= r'C:\Users\ASUS\Downloads\code1.1\test_data.csv'
+
+# ***********************************************
+    
 
 BATCH_SIZE = 16
 BORDER_WIDTH = 46
@@ -76,8 +86,6 @@ def read_csv_data(csv_data_path):
     data = csv_data >> Collect()   
     return data
 
-train_csv_data_path= r'C:\Users\ASUS\Downloads\code1.1\train_data.csv'
-val_csv_data_path= r'C:\Users\ASUS\Downloads\code1.1\test_data.csv'
 
 train_data = read_csv_data(train_csv_data_path)
 val_data = read_csv_data(val_csv_data_path)
@@ -138,10 +146,13 @@ def retouch_discriminator(input_shape=(224, 224, 3), regularize_weight=0.0001):
     apool = GlobalAveragePooling2D(data_format='channels_last')(conv4_2)
     disc_out = Dense(2, activation='softmax', name='disc_out', kernel_regularizer=l2(regularize_weight))(apool)
 
-    # print("disc_out",disc_out)
-
     model = Model(inputs=[in_image, in_mask], outputs=disc_out)
+
+    #********************************************************************
+
     plot_model(model, to_file = r'C:\Users\ASUS\Downloads\code1.1\discriminator_model.png', show_shapes=True)
+
+    #********************************************************************
 
     model.summary()
 
@@ -179,36 +190,23 @@ def drop_patch(sample, drop_prob=0.9):
 def train_batch(sample):
     # train the discriminator
     # generate fake images
-    # print("train batch")
     set_trainability(model_D, trainable=True)
     generated_images = model_G.predict(sample[0], batch_size=BATCH_SIZE)
-    # print(generated_images.shape)
     generated_images = np.argmax(generated_images, axis=-1).astype(np.uint8)
     generated_images = np.eye(N_CLASSES, dtype=np.uint8)[generated_images]
 
-    images = np.copy(sample[0][0][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :])
-    # print("images", images.shape)
-    X_img = np.concatenate((sample[0][0][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :], images), axis=0)
-    X_mask = np.concatenate((sample[1][0][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :], generated_images), axis=0)
+    images = np.copy(sample[0][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :])
+    X_img = np.concatenate((sample[0][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :], images), axis=0)
+    X_mask = np.concatenate((sample[1][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :], generated_images), axis=0)
     y = np.asarray([[0, 1]]*BATCH_SIZE + [[1, 0]]*BATCH_SIZE, dtype=np.int8)
 
-    # print("[X_img",X_img.shape)
-    # print("[X_mask",X_mask.shape)
-    # print("y",y.shape)
     D_error = model_D.train_on_batch([X_img, X_mask], y)
-    # D_error = model_D.train_on_batch(X_img, X_mask)
 
     # train the Generator
     set_trainability(model_D, trainable=False)
     y = np.asarray([[0, 1]] * BATCH_SIZE, dtype=np.int8)
 
-    # print("[sample[0][0]",sample[0][0].shape)
-    # print("[sample[1][0]",sample[1][0].shape)
-    # print("sample[0][0] border",sample[0][0][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :].shape)
-    # print("sample[1][0] border",sample[1][0][:, BORDER_WIDTH:-BORDER_WIDTH, BORDER_WIDTH:-BORDER_WIDTH, :].shape)
-    # print("y",y.shape)
-
-    G_error = model_D_G.train_on_batch(sample[0], [y, sample[1][0]])
+    G_error = model_D_G.train_on_batch(sample[0], [y, sample[1]])
 
     print("D_error",D_error)
     print("G_error",G_error)
@@ -216,21 +214,122 @@ def train_batch(sample):
     return (D_error, G_error[2])
 
 def test_batch(sample):
-    outp = model_G.test_on_batch(sample[0], sample[1][0])
+    outp = model_G.test_on_batch(sample[0], sample[1])
     return (outp,)
+
+# from utils.logging import log_scalar, log_sequence_of_scalars
+
+# def train_epoch(epoch, train_data, labeldist, data_iterator_nuts):
+#     (img_reader, mask_reader, roi_reader, augment_1, augment_2, image_patcher,  build_batch_train) = data_iterator_nuts
+
+#     train_data_iterator = get_data_iterator(train_data, labeldist, img_reader, mask_reader, roi_reader, augment_1, augment_2, image_patcher,  build_batch_train, 
+#                 data_type="train")
+
+#     train_error = []
+#     for enum, sample_item in enumerate(train_data_iterator):
+#         im = sample_item[0][0]
+#         mask = sample_item[1][0]
+#         v1 = sample_item[1][1]
+#         v2 = sample_item[1][2]
+#         v3 = sample_item[1][3]
+
+#         if im.shape[0]!=BATCH_SIZE or mask.shape[0]!=BATCH_SIZE:
+#             continue
+
+#         sample = [im, mask, v1, v2, v3]
+
+#         error = train_batch(sample)
+
+#         # print("error", error)
+
+#         train_error.append(error)
+
+#         # mean error of train_batch
+#         mean_error = np.mean([ x[0] for x in train_error ])
+#         # mean_iou = np.mean([ x[1] for x in train_error ])
+#         # mean_fscore = np.mean([ x[2] for x in train_error ])
+
+#         if mean_error>10**(-PRECISION):
+#             mean_error = mean_error.round(PRECISION)
+#             # mean_iou = mean_iou.round(PRECISION)
+#             # mean_fscore = mean_fscore.round(PRECISION)
+
+#         # print("Epoch: {}, Step: {}\t-> train error: {}, IOUScore: {}, FScore: {}".format(epoch, step, mean_error, mean_iou, mean_fscore))
+#         print("Epoch: {} \t-> train error: {}".format(epoch,  mean_error))
+
+
+#     # print("train_error",train_error)
+#     # print("shape",train_error.shape)
+
+#     trainn_error = [ x[0] for x in train_error ]
+#     # train_iou = [ x[1] for x in train_error ]
+#     # train_fscore = [ x[2] for x in train_error ]
+
+#     return trainn_error #, train_iou, train_fscore
+    
+
+# def validate_epoch(epoch, val_data, data_iterator_nuts):
+#     (img_reader, mask_reader, roi_reader, augment_1, augment_2, image_patcher,  build_batch_train) = data_iterator_nuts
+
+#     val_data_iterator = get_data_iterator(val_data, "", img_reader, mask_reader, roi_reader, augment_1, augment_2, image_patcher,  build_batch_train, 
+#                 data_type="val")
+
+#     val_error = []
+#     for enum, sample_item in enumerate(val_data_iterator):
+#         im = sample_item[0][0]
+#         mask = sample_item[1][0]
+#         v1 = sample_item[1][1]
+#         v2 = sample_item[1][2]
+#         v3 = sample_item[1][3]
+
+#         if im.shape[0]!=BATCH_SIZE or mask.shape[0]!=BATCH_SIZE:
+#             continue
+
+#         sample = [im, mask, v1, v2, v3]
+#         error = test_batch(sample)
+
+#         val_error.append(error)
+
+#     mean_error = np.mean([ x[0] for x in val_error ])
+#     # mean_iou = np.mean([ x[1] for x in val_error ])
+#     # mean_fscore = np.mean([ x[2] for x in val_error ])
+
+#     if mean_error>10**(-PRECISION):
+#         mean_error = mean_error.round(PRECISION)
+#         # mean_iou = mean_iou.round(PRECISION)
+#         # mean_fscore = mean_fscore.round(PRECISION)
+#     # print("Epoch: {}\t-> val error: {}, IOUScore: {}, FScore: {}".format(epoch,  mean_error, mean_iou, mean_fscore))   
+#     print("Epoch: {}\t-> val error: {}".format(epoch,  mean_error))  
+            
+
+#     val_errorr = [ x[0] for x in val_error ]
+#     # val_iou = [ x[1] for x in val_error ]
+#     # val_fscore = [ x[2] for x in val_error ]
+
+#     return val_errorr #, val_iou, val_fscore
 
 
 if __name__=="__main__":
 
-    #*************************************
+
+
+    #**************************************
 
     log_cols_train = LogCols(r'C:\Users\ASUS\Downloads\code1.1\logs\train_log.csv', cols=None, colnames=('D error', 'G error'))
     log_cols_test = LogCols(r'C:\Users\ASUS\Downloads\code1.1\logs\test_log.csv', cols=None, colnames=('D error', 'G error'))
+    log_fol=r"C:\Users\ASUS\Downloads\code1.1\logs_adversarial"
     weight_fol = r"C:\Users\ASUS\Downloads\code1.1\weights_adversarial"
     DATA_ROOT = r'C:\Users\ASUS\Downloads\code1.1\pre_processed'
-    pre_weight_file = r'C:\Users\ASUS\Downloads\code1.1\weights\best_weight.h5'
+    processed_img_fol= os.path.join(DATA_ROOT, "oct_imgs")
+    processed_oct_mask_fol= os.path.join(DATA_ROOT, "oct_masks")
+    processed_roi_mask_fol= os.path.join(DATA_ROOT, "roi_masks")
+    generator_pre_weight_file = None # r'C:\Users\ASUS\Downloads\code1.1\weights\best_weight.h5'
     
     #**************************************
+
+    log_dir=os.path.join(log_fol, str(int(time())))
+    summary_writer = tf.summary.create_file_writer(log_dir)
+    labeldist = train_data >> CountValues(1)
 
     TransformImage.register('myrotate', myrotate)
 
@@ -270,6 +369,17 @@ if __name__=="__main__":
     is_topcon = lambda v: v[1] == 'Topcon'
     is_spectralis = lambda v: v[1] == 'Spectralis'
 
+    patch_size = (PATCH_SIZE_H, PATCH_SIZE_W)
+    filter_batch_shape = lambda s: s[0][0].shape[0] == BATCH_SIZE
+
+    patch_mean = 128.
+    patch_sd = 128.
+    remove_mean = lambda s: (s.astype(np.float32) - patch_mean) / patch_sd
+
+    # Data loader
+    data_iterator_nuts = get_iterator_nuts(processed_img_fol, processed_oct_mask_fol, \
+                        processed_roi_mask_fol, patch_size, BATCH_SIZE,)
+
     # define the metrics
     metric = [IOUScore(threshold=0.5), FScore(threshold=0.5)]
 
@@ -302,22 +412,15 @@ if __name__=="__main__":
     model_D_G = Model([im_input], [D_out, G_out])
     model_D_G.compile(optimizer=Adam(learning_rate=ADAM_LR, beta_1=ADAM_BETA_1), loss=['categorical_crossentropy', loss_fn])#, metrics=metric)
 
-    # im_input (None, 256, 128, 3)
-    # im2_input (None, 164, 36, 3)
-    # G_out (None, 164, 36, 4)
-    # G_out_bz (None, 164, 36, 4)
-    # D_out (None, 2)
-
-    LOAD_WEIGTHS = True
-    if LOAD_WEIGTHS:
-        assert os.path.isfile(pre_weight_file)
-        model_G.load_weights(pre_weight_file)
+    if generator_pre_weight_file is not None:
+        model_G.load_weights(generator_pre_weight_file)
 
     filter_batch_shape = lambda s: s[0][0].shape[0] == BATCH_SIZE
 
     patch_mean = 128.
     patch_sd = 128.
     remove_mean = lambda s: (s.astype(np.float32) - patch_mean) / patch_sd
+
 
     best_error = float("inf")
     print('Starting network training')

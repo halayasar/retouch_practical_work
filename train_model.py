@@ -217,6 +217,10 @@ if __name__=="__main__":
 
     summary_writer = tf.summary.create_file_writer(log_dir)
 
+    if pre_trained_model_path is not None:
+        print("Loading weights : ", pre_trained_model_path)
+        model.load_weights(pre_trained_model_path)
+
     best_error = float("inf")
     training_step=0
 

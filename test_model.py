@@ -209,6 +209,7 @@ OVERLAY=True
 
 if __name__=="__main__":
     # ********************************************************************************
+
     # script handles test images without preprocessing, need to run it separately for every vendor folder
 
     # input_path = r"C:\Users\ASUS\Downloads\code1.1\Test\Topcon"
@@ -216,7 +217,9 @@ if __name__=="__main__":
     input_path = r"C:\Users\ASUS\Downloads\code1.1\Test\Spectralis"
 
     output_fol = r"C:\Users\ASUS\Downloads\code1.1\output"
-    weight_path = r"C:\Users\ASUS\Downloads\code1.1\weights\best_weight.h5"
+    weight_path = r"C:\Users\ASUS\Downloads\retouch\outputs\final_gan_weights.h5"
+
+    # ********************************************************************************
 
     H, W = config.PATCH_SIZE_H, config.PATCH_SIZE_W
 
