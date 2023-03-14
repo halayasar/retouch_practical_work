@@ -49,7 +49,7 @@ if __name__=="__main__":
     processed_img_fol= os.path.join(DATA_ROOT, "oct_imgs")
     processed_oct_mask_fol= os.path.join(DATA_ROOT, "oct_masks")
     processed_roi_mask_fol= os.path.join(DATA_ROOT, "roi_masks")
-    generator_pre_weight_file = r'C:\Users\ASUS\Downloads\retouch\outputs\final_gan_weights.h5'
+    generator_pre_weight_file = r'C:\Users\ASUS\Downloads\retouch\outputs\best_weight.h5'
 
     #*****************************************
 

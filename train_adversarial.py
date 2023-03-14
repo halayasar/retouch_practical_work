@@ -446,8 +446,15 @@ if __name__=="__main__":
 
         print(f'Epoch {e+1}, Validation error : {val_error}')
         if val_error < best_error:
-            # save weights
-            print('saving weights at epoch: ', e, val_error)
-            model_G.save_weights(weight_fol + 'gan_weights.h5')
-            best_error = val_error
-        model_G.save_weights(weight_fol + '\best_gan_weights.h5')
+            print( f'saving weights at epoch: {e+1}, val_error: {val_error}')
+            model_G.save_weights(weight_fol+"/best_gan_weights.h5")
+            best_error=val_error
+        
+
+    # saving weights each epoch for longer epochs if user wants to
+    weight_path=weight_fol+"/"+"gan_weights_ep{}".format(e+1)
+    model_G.save_weights(weight_path)
+
+    with open('/content/drive/MyDrive/project/adv_training_logs.csv', mode='a') as file:
+      writer = csv.writer(file)
+      writer.writerow([e+1, val_error])
