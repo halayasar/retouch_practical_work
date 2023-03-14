@@ -57,7 +57,7 @@ Again, the best segmentation model weight after adversarial training is loaded a
 Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link). The training and validation logs are shown below:
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/92387828/224982269-808c86e4-dee1-42a9-9985-24b182493704.PNG" width=20% height=20%> <img src="https://user-images.githubusercontent.com/92387828/224982141-db3de048-7fc1-49a7-af16-6e9c19c9ba86.PNG" width=20% height=20%>
+<img src="https://user-images.githubusercontent.com/92387828/224982269-808c86e4-dee1-42a9-9985-24b182493704.PNG" width=50% height=50%> <img src="https://user-images.githubusercontent.com/92387828/224982141-db3de048-7fc1-49a7-af16-6e9c19c9ba86.PNG" width=50% height=50%>
 </p>
 
 ### Model outputs 
