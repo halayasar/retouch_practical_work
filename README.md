@@ -54,7 +54,14 @@ This script carries out GAN training. The best segmentation model weight is load
 ### Model Evaluation
 Again, the best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the IOU Score and F Score as metrics. There is an evaluation script for before and after the adversarial training to see the effect of adversarial training on the model. 
 
-Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link). The training and validation logs are shown below:
+So far, the best evaluation scores obtained are: (preliminary results, not final)
+- before adversarial training:
+loss: 0.1652 - iou_score: 0.4546 - f1-score: 0.5276
+
+- after adversarial training:
+loss: 0.3532 - iou_score: 0.6069 - f1-score: 0.667
+
+Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/12TeeCgwxXRfMW-IJ-SijKOdwZQhV1yo-/view?usp=share_link). The training and validation logs are shown below:
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/92387828/224982269-808c86e4-dee1-42a9-9985-24b182493704.PNG" width=35% height=35%> <img src="https://user-images.githubusercontent.com/92387828/224982141-db3de048-7fc1-49a7-af16-6e9c19c9ba86.PNG" width=35% height=35%>
@@ -66,7 +73,7 @@ The testing script takes in the OCT scan as input and outputs a segmentation mas
 The script then uses an image, crops it into smaller patches, and passes each patch through prediction function to get a binary mask for that patch. It then combines the binary masks for each patch to get the final segmentation mask for the whole image. Image overlays are also produced. Some overlays are seen below: 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/92387828/222973538-556f5b9b-16a1-4894-8a10-c5253e1fae00.png" width=20% height=20%> <img src="https://user-images.githubusercontent.com/92387828/222973534-ef74072c-5475-4118-95b5-66fee341539e.png" width=20% height=20%>
+  <img src="https://user-images.githubusercontent.com/92387828/224986209-511d9549-2a92-4469-b555-c13bc44fdc84.PNG" width=20% height=20%> <img src="https://user-images.githubusercontent.com/92387828/224986316-20e40e06-ad22-4e28-b6f6-f47aee5125c8.PNG" width=20% height=20%><img src="https://user-images.githubusercontent.com/92387828/224986377-0bd3ca42-4483-4fc7-bb22-ae36643023e7.PNG" width=20% height=20%>
 </p>
 
 All predicted outputs can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
