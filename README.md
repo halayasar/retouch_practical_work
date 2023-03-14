@@ -52,9 +52,13 @@ This script carries out training of the segmentation model. The training is done
 This script carries out GAN training. The best segmentation model weight is loaded and used in the training. The GAN model is trained with each epoch involving training the generator and discriminator alternately, with batches of real and fake images. The generator attempts to create realistic fake images, and the discriminator tries to distinguish between the real and fake images. This process is repeated for multiple epochs until the discriminator can no longer distinguish between the real and fake images. As the segmentation model (generator) is trained, the weights are also saved in a separate folder for the adversarial weights. All generator weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link). A plot of the discriminator model used is in the plots folder in the repository.
 
 ### Model Evaluation
-Again, the best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the IOU Score and F Score as metrics.
+Again, the best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the IOU Score and F Score as metrics. There is an evaluation script for before and after the adversarial training to see the effect of adversarial training on the model. 
 
-Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link). They are as followed:
+Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link). The training and validation logs are shown below:
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/92387828/224982269-808c86e4-dee1-42a9-9985-24b182493704.PNG" width=20% height=20%> <img src="https://user-images.githubusercontent.com/92387828/224982141-db3de048-7fc1-49a7-af16-6e9c19c9ba86.PNG" width=20% height=20%>
+</p>
 
 ### Model outputs 
 #### test_model.py
