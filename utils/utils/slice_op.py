@@ -6,25 +6,13 @@ def hist_match(source, template):
     Adjust the pixel values of a grayscale image such that its histogram
     matches that of a target image
 
-    Arguments:
-    -----------
-        source: np.ndarray
-            Image to transform; the histogram is computed over the flattened
-            array
-        template: np.ndarray
-            Template image; can have different dimensions to source
-    Returns:
-    -----------
-        matched: np.ndarray
-            The transformed output image
     """
 
     oldshape = source.shape
     source = source.ravel()
     template = template.ravel()
 
-    # get the set of unique pixel values and their corresponding indices and
-    # counts
+    # get the set of unique pixel values and their corresponding indices and counts
     s_values, bin_idx, s_counts = np.unique(source, return_inverse=True,
                                             return_counts=True)
     t_values, t_counts = np.unique(template, return_counts=True)
