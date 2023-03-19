@@ -175,6 +175,9 @@ def create_discriminator(backbone_name):
 
     discriminator = Model(bb.input, x)
 
+    plot_model(discriminator, to_file = r'C:\Users\ASUS\Downloads\retouch_practical_work\model plots\discriminator_model_.png', show_shapes=True)
+
+
     return discriminator
 
 

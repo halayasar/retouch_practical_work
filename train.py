@@ -210,24 +210,23 @@ def validate_epoch(epoch, model, discriminator, val_data, data_iterator_nuts, st
 if __name__=="__main__":
 
     # **************************************************************************
-    train_csv_data_path= r'C:\Users\halay\OneDrive\Desktop\project\train_data.csv'
-    val_csv_data_path= r'C:\Users\halay\OneDrive\Desktop\project\test_data.csv'
+    train_csv_data_path= r'C:\Users\ASUS\Downloads\code1.1\train_data.csv'
+    val_csv_data_path= r'C:\Users\ASUS\Downloads\code1.1\test_data.csv'
 
     # folders and their path to proccessed inputs
-    data_root = r"C:\Users\halay\OneDrive\Desktop\project\pre_processed\\"
+    data_root = r"C:\Users\ASUS\Desktop\7ala - AI\Seminar in AI\Data\Train2\pre_processed\\"
     processed_img_fol= os.path.join(data_root, "oct_imgs")
     processed_oct_mask_fol= os.path.join(data_root, "oct_masks")
     processed_roi_mask_fol= os.path.join(data_root, "roi_masks")
 
     # folder to save training weights
-    weight_fol=r"C:\Users\halay\OneDrive\Desktop\project\weights"
+    weight_fol=r"C:\Users\ASUS\Downloads\code1.1\weights"
 
     # folder to save logs viewable by tensorboard
-    log_fol=r"C:\Users\halay\OneDrive\Desktop\project\logs"
+    log_fol=r"C:\Users\ASUS\Downloads\code1.1\logs"
 
     # if not present, keep it None
-    pre_weight_file= None #r'C:\Users\halay\OneDrive\Desktop\project\weights\best_weight.h5' 
-
+    pre_trained_model_path= None #r"C:\Users\ASUS\Downloads\code1.1\weights\best_weight.h5"
     # **************************************************************************
 
     # prepare data for training and validation
@@ -249,9 +248,9 @@ if __name__=="__main__":
     # print(model.summary())
 
     # load pre-trained model, if any
-    if pre_weight_file is not None:
-        print("Loading weights : ", pre_weight_file)
-        model.load_weights(pre_weight_file)
+    if pre_trained_model_path is not None:
+        print("Loading weights : ", pre_trained_model_path)
+        model.load_weights(pre_trained_model_path)
 
 
     optimizer=Adam(learning_rate=ADAM_LR, beta_1=ADAM_BETA_1)
