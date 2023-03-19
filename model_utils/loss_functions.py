@@ -86,3 +86,21 @@ def get_combined_cross_entropy_and_dice_loss_function(BATCH_SIZE, num_classes):
     return get_balanced_cross_entropy_and_dice_loss
 
 
+def generator_loss(predicted_mask_output):
+    bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=False)
+
+    loss_val = bce_loss(tf.ones_like(predicted_mask_output), predicted_mask_output)
+
+    return loss_val
+
+
+
+def discriminator_loss(label_mask_output, predicted_mask_output):
+    bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=False)
+
+    l1 = bce_loss(tf.ones_like(label_mask_output), label_mask_output)
+    l2 = bce_loss(tf.zeros_like(predicted_mask_output), predicted_mask_output)
+
+    total_loss = l1 + l2
+
+    return total_loss

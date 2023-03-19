@@ -4,10 +4,10 @@ from keras.layers import Conv2D, Input, UpSampling2D
 from keras.layers import GlobalMaxPooling2D, MaxPooling2D
 from keras.layers import GlobalAveragePooling2D, SpatialDropout2D, Conv2DTranspose
 
-from keras.layers import BatchNormalization, LeakyReLU, Cropping2D
+from keras.layers import BatchNormalization, LeakyReLU, Cropping2D, Dense
 from keras.layers import concatenate, Activation
 
-from keras.models import  Model
+from keras.models import  Model, Sequential 
 
 from keras.utils import plot_model
 from keras.optimizers import Adam
@@ -18,7 +18,7 @@ from keras.activations import softmax
 
 from model_utils.model_layers import Softmax4D
 
-
+N_CLASSES = 4
 
 def create_encoder_layer(layer_input, filters, regularizer, block_name, activation="relu", use_batch_normalization=True, 
                             data_format='channels_last' ,first_layer=False):
@@ -156,4 +156,33 @@ def create_unet_model(input_shape=(224, 224, 3), regularizer_type=l2 , regulariz
 
     return model
         
+def create_discriminator(backbone_name):
+    from keras.applications import MobileNetV2, VGG16
 
+
+    if backbone_name=="MobileNetV2":
+        bb = MobileNetV2(weights=None, include_top=False, input_shape=(None, None, N_CLASSES))
+    elif backbone_name=="VGG16":
+        bb = VGG16(weights=None, include_top=False, input_shape=(None, None, N_CLASSES))        
+    else:
+        raise Exception("Invalid backbone name")
+    
+    x=GlobalMaxPooling2D()(bb.output)
+    x=Dense(256)(x)
+    x=BatchNormalization()(x)
+
+    x=Dense(1, activation="sigmoid")(x)
+
+    discriminator = Model(bb.input, x)
+
+    return discriminator
+
+
+def create_gan(generator, discriminator):
+    discriminator.trainable = False
+
+    model = Sequential()
+    model.add(generator)
+    model.add(discriminator)
+
+    return model

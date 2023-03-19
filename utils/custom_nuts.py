@@ -19,15 +19,9 @@ import scipy
 from PIL import Image
 import matplotlib.patches
 import matplotlib.pyplot as plt
-
-
 from config import *
 
-
-
 SHAPE_MULT = {1024: 2., 496: 1., 650: 0.004 / 0.0035, 885: 0.004 / 0.0026}
-
-
 
 def sample_oct_patch_centers(roimask, pshape, npos, pos=1, neg=0):
     PYINX = 0
@@ -53,7 +47,6 @@ def sample_oct_patch_centers(roimask, pshape, npos, pos=1, neg=0):
             break
 
     return c_hold
-
 
 def sample_patches_entropy_mask(img, mask=None, roimask=None, pshape=(224, 224), npos=10, nneg=1, pos=255, neg=0,
                                 patch_border=12):
@@ -213,6 +206,7 @@ def ReadOCT(sample, columns, pathfunc=None, as_grey=False, dtype='uint8'):
 
     def load(fileid):
         """Load image for given fileid"""
+        
         if isinstance(pathfunc, str):
             filepath = pathfunc.replace('*', fileid)
         elif hasattr(pathfunc, '__call__'):
