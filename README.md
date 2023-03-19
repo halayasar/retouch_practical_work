@@ -34,32 +34,21 @@ This script defines several functions to create a data iterator for training the
 #### Model
 This script defines functions to create an instance of the U-Net model, a convolutional neural network used for image segmentation tasks. The model consists of an encoder, which downsamples the input image to extract features, and a decoder, which upsamples the feature map to generate a segmentation map with the same size as the input image. A plot of the model can be seen in the plots folder in the repository. 
 
-The "create_encoder_layer" function defines a single layer of the encoder, which includes convolutional and batch normalization layers. If it is the first layer of the encoder, a 7x7 convolutional layer is used to process the input image. Otherwise, a max pooling layer is used to downsample the feature map.
-
-The "create_decoder_layer" function defines a single layer of the decoder, which includes a deconvolutional layer, a concatenation layer that merges the feature map from the corresponding encoder layer, and a convolutional layer. Spatial dropout and batch normalization layers can be included in the decoder. Cropping is performed on the encoder feature map to ensure that it has the same size as the upsampled decoder feature map.
-
-The "create_unet_model" function creates an instance of the U-Net model with a specific architecture. The model includes four encoder layers and three decoder layers. The first decoder layer has the smallest size, while the last decoder layer has the same size as the input image. The decoder layers also include additional upsampling and cropping layers to match the size of the encoder feature map. The model takes an input image of size (224, 224, 3) and produces a segmentation map with the same size.
+The script also defines the architecture of the descriminator and GAN model. The descriminator uses the MobileNetV2 architecture after editing its output to generate a binary classification. 
 
 #### loss_functions.py
-This script defines three functions to compute loss functions for a neural network. "get_dice_loss" function returns the Dice loss for binary segmentation tasks. The function calculates true positive, false positive and false negative rates, and returns the Dice loss which is a measure of how similar the predicted segmentation map is to the true segmentation map.
+This script defines three functions to compute loss functions for a neural network. It defines the Dice loss for binary segmentation tasks. The function calculates true positive, false positive and false negative rates, and returns the Dice loss which is a measure of how similar the predicted segmentation map is to the true segmentation map.
 
-"get_balanced_cross_entropy_loss_function" is a function that calculates the cross-entropy loss, which is a commonly used loss function for classification tasks. The function returns the average loss over all classes. "get_combined_cross_entropy_and_dice_loss_function" is a function that computes the combined loss of Dice loss and cross-entropy loss. 
+The balanced cross entropy loss function is a function that calculates the cross-entropy loss, which is a commonly used loss function for classification tasks. The function returns the average loss over all classes. These functions are then combined in a combination function that combines loss of Dice loss and cross-entropy loss. The script also defines the discriminator and generator losses. 
 
 #### train_model.py
-This script carries out training of the segmentation model. The training is done for 100 epochs with the IOU Score and F Score as metrics. All model weights are saved and the best weight is named appropriately. The folder containing all the weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
-
-#### train_adversarial.py
-This script carries out GAN training. The best segmentation model weight is loaded and used in the training. The GAN model is trained with each epoch involving training the generator and discriminator alternately, with batches of real and fake images. The generator attempts to create realistic fake images, and the discriminator tries to distinguish between the real and fake images. This process is repeated for multiple epochs until the discriminator can no longer distinguish between the real and fake images. As the segmentation model (generator) is trained, the weights are also saved in a separate folder for the adversarial weights. All generator weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link). A plot of the discriminator model used is in the plots folder in the repository.
+This script carries out GAN training of the model. The training is done for 100 epochs with the FScore (dice index) as a metric. All model weights are saved and the best weight is named appropriately. The folder containing all the weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Model Evaluation
-Again, the best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the IOU Score and F Score as metrics. There is an evaluation script for before and after the adversarial training to see the effect of adversarial training on the model. 
+Again, the best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the FScore as a metric.
 
 So far, the best evaluation scores obtained are: (preliminary results, not final)
-- before adversarial training:
-loss: 0.1652 - iou_score: 0.4546 - f1-score: 0.5276
-
-- after adversarial training:
-loss: 0.3532 - iou_score: 0.6069 - f1-score: 0.667
+loss: 0.1652 - f1-score: 0.5276
 
 Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/12TeeCgwxXRfMW-IJ-SijKOdwZQhV1yo-/view?usp=share_link). The training and validation logs are shown below:
 
