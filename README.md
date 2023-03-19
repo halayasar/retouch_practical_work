@@ -16,7 +16,7 @@ Script with all hyperparameters needed for training and preprocessing. The fluid
 
 #### Utils folder
 ##### Base, losses.py, metrics.py
-The metrics.py script in the segmentation_models library implements various evaluation metrics commonly used in image segmentation tasks. The metrics include Intersection over Union (IoU), Dice coefficient, Precision, Recall, F1 score, and Average Precision. These metrics can be used to measure the accuracy and performance of segmentation models. The metrics chosen in this script is the IOU Score and FScore (Dice coefficient). The IoU and Dice coefficient measure the overlap between the predicted and ground truth segmentation masks. Additionally, the metrics support multiple classes and can be used for both binary and multi-class segmentation tasks.
+The metrics.py script in the segmentation_models library implements various evaluation metrics commonly used in image segmentation tasks. The metrics include Intersection over Union (IoU), Dice coefficient, Precision, Recall, F1 score, and Average Precision. These metrics can be used to measure the accuracy and performance of segmentation models. 
 
 ##### custom_nuts.py
 The script consists of two functions: "sample_oct_patch_centers" and "sample_patches_entropy_mask". "sample_oct_patch_centers" takes as input a binary image roimask, a patch shape pshape, the number of positive samples to extract npos, and values to indicate a positive and a negative label, pos and neg respectively. It returns a list of coordinates for npos positive patches that are sampled randomly from roimask.
@@ -45,7 +45,7 @@ The balanced cross entropy loss function is a function that calculates the cross
 This script carries out GAN training of the model. The training is done for 100 epochs with the FScore (dice index) as a metric. All model weights are saved and the best weight is named appropriately. The folder containing all the weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Model Evaluation
-Again, the best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the FScore as a metric.
+The best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the FScore as a metric.
 
 So far, the best evaluation scores obtained are: (preliminary results, not final)
 loss: 0.1652 - f1-score: 0.5276
