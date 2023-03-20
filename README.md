@@ -34,7 +34,7 @@ This script defines several functions to create a data iterator for training the
 #### Model
 This script defines functions to create an instance of the U-Net model, a convolutional neural network used for image segmentation tasks. The model consists of an encoder, which downsamples the input image to extract features, and a decoder, which upsamples the feature map to generate a segmentation map with the same size as the input image. A plot of the model can be seen in the plots folder in the repository. 
 
-The script also defines the architecture of the descriminator and GAN model. The descriminator uses the MobileNetV2 architecture after editing its output to generate a binary classification. 
+The script also defines the architecture of the descriminator using the MobileNetV2 architecture after editing its output to generate a binary classification. 
 
 #### loss_functions.py
 This script defines three functions to compute loss functions for a neural network. It defines the Dice loss for binary segmentation tasks. The function calculates true positive, false positive and false negative rates, and returns the Dice loss which is a measure of how similar the predicted segmentation map is to the true segmentation map.
@@ -42,15 +42,15 @@ This script defines three functions to compute loss functions for a neural netwo
 The balanced cross entropy loss function is a function that calculates the cross-entropy loss, which is a commonly used loss function for classification tasks. The function returns the average loss over all classes. These functions are then combined in a combination function that combines loss of Dice loss and cross-entropy loss. The script also defines the discriminator and generator losses. 
 
 #### train_model.py
-This script carries out GAN training of the model. The training is done for 100 epochs with the FScore (dice index) as a metric. All model weights are saved and the best weight is named appropriately. The folder containing all the weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
+This script carries out GAN training of the model. The training is done for 100 epochs with the FScore (dice index) as a metric. The folder containing all model weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Model Evaluation
-The best segmentation model weight after adversarial training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the FScore as a metric.
+The best segmentation model weight after training is loaded and used to evaluate the model. The evaluation, as mentioned, is done with the FScore as a metric.
 
 So far, the best evaluation scores obtained are: (preliminary results, not final)
-loss: 0.1652 - f1-score: 0.5276
+loss: ### - f1-score: ###
 
-Tensorboard logging is performed and all logging folders can be found [here](https://drive.google.com/file/d/12TeeCgwxXRfMW-IJ-SijKOdwZQhV1yo-/view?usp=share_link). The training and validation logs are shown below:
+Tensorboard logging is performed and the logs are shown below:
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/92387828/224982269-808c86e4-dee1-42a9-9985-24b182493704.PNG" width=35% height=35%> <img src="https://user-images.githubusercontent.com/92387828/224982141-db3de048-7fc1-49a7-af16-6e9c19c9ba86.PNG" width=35% height=35%>
@@ -59,7 +59,7 @@ Tensorboard logging is performed and all logging folders can be found [here](htt
 ### Model outputs 
 #### test_model.py
 The testing script takes in the OCT scan as input and outputs a segmentation mask for the input image. The radius of the circular crop of the image is found and preprocessing is performed on the image (similar to that done on training dataset). Afterwards, the output of the segmentation model is used to set the class with the highest probability as the predicted class. Then, thresholding is performed to the probabilities based on a threshold value of 0.5 and returns a binary mask.
-The script then uses an image, crops it into smaller patches, and passes each patch through prediction function to get a binary mask for that patch. It then combines the binary masks for each patch to get the final segmentation mask for the whole image. Image overlays are also produced. Some overlays are seen below: 
+The script then uses an image, crops it into smaller patches, and passes each patch through prediction function to get a binary mask for that patch. It then combines the binary masks for each patch to get the final segmentation mask for the whole image. Image overlays are also produced with red color indicating abnormal areas. Some overlays are seen below: 
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/92387828/224986209-511d9549-2a92-4469-b555-c13bc44fdc84.PNG" width=30% height=30%> <img src="https://user-images.githubusercontent.com/92387828/224986316-20e40e06-ad22-4e28-b6f6-f47aee5125c8.PNG" width=30% height=30%> <img src="https://user-images.githubusercontent.com/92387828/224986377-0bd3ca42-4483-4fc7-bb22-ae36643023e7.PNG" width=30% height=30%>
