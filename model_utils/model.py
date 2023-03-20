@@ -155,37 +155,22 @@ def create_unet_model(input_shape=(224, 224, 3), regularizer_type=l2 , regulariz
         model = Model(inputs=layer_input, outputs=[c1, c_out_IRF, c_out_SRF, c_out_PED])
 
     return model
-        
+
+
 def create_discriminator(backbone_name):
     from keras.applications import MobileNetV2, VGG16
 
-
     if backbone_name=="MobileNetV2":
-        bb = MobileNetV2(weights=None, include_top=False, input_shape=(None, None, N_CLASSES))
+        bb = MobileNetV2(weights=None, include_top=False, input_shape=(None,None, N_CLASSES))
     elif backbone_name=="VGG16":
-        bb = VGG16(weights=None, include_top=False, input_shape=(None, None, N_CLASSES))        
-    else:
-        raise Exception("Invalid backbone name")
-    
-    x=GlobalMaxPooling2D()(bb.output)
-    x=Dense(256)(x)
-    x=BatchNormalization()(x)
+        bb = VGG16(weights=None, include_top=False, input_shape=(None,None,N_CLASSES))
 
-    x=Dense(1, activation="sigmoid")(x)
+    x = GlobalAveragePooling2D()(bb.output)
+    x = Dense(256)(x)
+    x = BatchNormalization()(x)
+
+    x = Dense(1, activation="sigmoid")(x)
 
     discriminator = Model(bb.input, x)
 
-    plot_model(discriminator, to_file = r'C:\Users\ASUS\Downloads\retouch_practical_work\model plots\discriminator_model_.png', show_shapes=True)
-
-
     return discriminator
-
-
-def create_gan(generator, discriminator):
-    discriminator.trainable = False
-
-    model = Sequential()
-    model.add(generator)
-    model.add(discriminator)
-
-    return model

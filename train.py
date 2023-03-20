@@ -9,7 +9,7 @@ import tensorflow as tf
 from keras.optimizers import Adam
 
 from utils.data_prepare import get_iterator_nuts, get_data_iterator, read_csv_data
-from model_utils.model import create_unet_model, create_discriminator, create_gan
+from model_utils.model import create_unet_model, create_discriminator
 from model_utils.loss_functions import get_combined_cross_entropy_and_dice_loss_function
 from model_utils.loss_functions import generator_loss, discriminator_loss
 from utils.framework_utils import KerasObject
@@ -22,7 +22,12 @@ from config import N_CLASSES, PRECISION
 from config import EPOCH, ADAM_LR, ADAM_BETA_1, D_ADAM_LR, D_ADAM_BETA_1
 import csv
 
-
+BORDER_WIDTH = 46
+EPOCH = 100 
+BATCH_SIZE = 16
+ADAM_LR = 0.0002
+D_ADAM_LR = 0.0002
+ADAM_BETA_1 = 0.7
 
 KerasObject.set_submodules(
     backend=tf.keras.backend,
@@ -61,11 +66,10 @@ def train_batch(generator,  discriminator, gen_optimizer, dis_optimizer, sample)
         gen_loss = generator_loss(pred_output)
         disc_loss = discriminator_loss(gt_output, pred_output)
 
-        # overall loss of GAN model: computed as weighted sum of the generator loss & 
+        # overall loss of model: computed as weighted sum of the generator loss & 
         # a mask loss that compares the generated samples to the GT samples
         model_loss = 1/3*gen_loss + mask_loss(sample[1], pred)
 
-        # evaluate GAN model
         # F1 score between the GT & the generated samples  
         f1_Score = F1_metric( tf.cast(sample[1], tf.float32), pred)
 
@@ -123,40 +127,36 @@ def train_epoch(epoch, model, discriminator, optimizer, dis_optimizer, train_dat
 
         model_loss, disc_loss, f1_Score = train_batch(model, discriminator, optimizer, dis_optimizer, sample) 
 
-        model_loss, disc_loss, f1_Score = model_loss.numpy(), disc_loss.numpy(), f1_Score.numpy()
+        train_error.append((model_loss, disc_loss, f1_Score))
 
-        error = model_loss
-        metric = f1_Score
-
-        train_error.append(error)
-        train_disc_error.append(disc_loss)
-        train_metric.append(metric)
-
+        # mean error of 5 iterations of train_batch
         if step%step_log_interval==0:
-            mean_error = np.mean([ x for x in train_error ])
-            mean_disc_error = np.mean([ x for x in train_disc_error ])
-            mean_dice = np.mean([ x for x in train_metric ])
+            mean_error = np.mean([ x[0] for x in train_error ])
+            mean_disc_loss = np.mean([ x[1] for x in train_error ])
+            mean_fscore = np.mean([ x[2] for x in train_error ])
+
             if mean_error>10**(-PRECISION):
                 mean_error = mean_error.round(PRECISION)
-            if mean_disc_error>10**(-PRECISION):
-                mean_disc_error = mean_disc_error.round(PRECISION)                
-            if mean_dice>10**(-PRECISION):
-                mean_dice = mean_dice.round(PRECISION)                
+                mean_disc_loss = mean_disc_loss.round(PRECISION)
+                mean_fscore = mean_fscore.round(PRECISION)
 
-            print("Epoch: {}, Step: {}\t->\ttrain error: {}\tdiscriminator error: {}\tdice_score : {}".format(epoch, step, mean_error, mean_disc_error, mean_dice))
+            print("Epoch: {}, Step: {}\t-> train error: {}, discriminator error: {}, FScore: {}".format(epoch, step, mean_error, mean_disc_loss, mean_fscore))
 
         # log for tensorboard view    
-        log_scalar(summary_writer, "STEP Train Error", error, training_step)
-        log_scalar(summary_writer, "STEP Train Discriminator Error", disc_loss, training_step)
-        log_scalar(summary_writer, "STEP Train Dice-Score", metric, training_step)
+        log_scalar(summary_writer, "STEP Train Error", mean_error, training_step)
 
         step+=1
         training_step+=1
 
-    # train_error = [ x for x in train_error ]
+    # print("train_error",train_error)
+    # print("shape",train_error.shape)
 
-    return (model, discriminator, train_error, train_disc_error, train_metric, training_step)
+    trainn_error = [ x[0] for x in train_error ]
+    train_disc_loss = [ x[1] for x in train_error ]
+    train_fscore = [ x[2] for x in train_error ]
 
+    return model, trainn_error, training_step, train_disc_loss, train_fscore
+    
 
 def validate_epoch(epoch, model, discriminator, val_data, data_iterator_nuts, step_log_interval=10):
     (img_reader, mask_reader, roi_reader, augment_1, augment_2, image_patcher,  build_batch_train) = data_iterator_nuts
@@ -179,33 +179,26 @@ def validate_epoch(epoch, model, discriminator, val_data, data_iterator_nuts, st
             continue
 
         sample = [im, mask, v1, v2, v3]
-        model_loss, f1_Score = validate_batch(model, discriminator, sample)
         
-        model_loss, f1_Score = model_loss.numpy(), f1_Score.numpy()
+        model_loss, f1_Score = validate_batch(model, discriminator, sample)
 
-        error = model_loss
-        metric = f1_Score
-
-        val_error.append(error)
-        val_metric.append(metric)
+        val_error.append((model_loss, f1_Score))
 
         if step%step_log_interval==0:
-            mean_error = np.mean([ x for x in val_error ])
-            mean_dice = np.mean([ x for x in val_metric ])
+            mean_error = np.mean([ x[0] for x in val_error ])
+            mean_fscore = np.mean([ x[1] for x in val_error ])
 
             if mean_error>10**(-PRECISION):
                 mean_error = mean_error.round(PRECISION)
-            if mean_dice>10**(-PRECISION):
-                mean_dice = mean_dice.round(PRECISION)   
-
-            print("Epoch: {}, Step: {}\t->\tval error: {}\tdice_score: {}".format(epoch, step, mean_error, mean_dice))   
-
+                mean_fscore = mean_fscore.round(PRECISION)
+            print("Epoch: {}, Step: {}\t-> val error: {}, FScore: {}".format(epoch, step, mean_error, mean_fscore))   
+            
         step+=1
 
-    # val_error = [ x for x in val_error ]
+    val_errorr = [ x[0] for x in val_error ]
+    val_fscore = [ x[1] for x in val_error ]
 
-    return (val_error, val_metric)
-
+    return val_errorr, val_fscore
 
 if __name__=="__main__":
 
@@ -226,7 +219,7 @@ if __name__=="__main__":
     log_fol=r"C:\Users\ASUS\Downloads\code1.1\logs"
 
     # if not present, keep it None
-    pre_trained_model_path= None #r"C:\Users\ASUS\Downloads\code1.1\weights\best_weight.h5"
+    pre_trained_model_path= None # r"C:\Users\ASUS\Downloads\retouch\outputs\final_gan_weights.h5"
     # **************************************************************************
 
     # prepare data for training and validation
@@ -263,9 +256,8 @@ if __name__=="__main__":
     # D_backbone_name="VGG16"
     discriminator = create_discriminator(D_backbone_name)
 
-    dis_optimizer=Adam(learning_rate=D_ADAM_LR, beta_1=D_ADAM_BETA_1)
+    dis_optimizer = Adam(learning_rate=D_ADAM_LR, beta_1=D_ADAM_BETA_1)
 
-    # d_loss =  tf.keras.losses.BinaryCrossentropy(from_logits=False)
     # discriminator.compile( optimizer=Adam(learning_rate=D_ADAM_LR, beta_1=D_ADAM_BETA_1), loss=d_loss, metrics=["accuracy"] )
 
 
@@ -278,67 +270,66 @@ if __name__=="__main__":
 
     summary_writer = tf.summary.create_file_writer(log_dir)
 
-    # best_error = float("inf")
-    best_metric = 0
-    training_step=0
+    best_error = float("inf")
 
-    print("\n")
-    print("Starting Training: ")
-    for epoch in range(EPOCH):
+training_step=0
 
-        # train model for single epoch
-        model, discriminator, train_epoch_error, train_epoch_disc_error, train_epoch_metric, training_step = train_epoch(epoch+1, 
-                                                    model, discriminator, optimizer, dis_optimizer, train_data, labeldist, 
-                                                    data_iterator_nuts, summary_writer, training_step, step_log_interval=5)
-        
+epoch = EPOCH
+error_hold = []
+print("Starting Training:")
 
-        print("\nEvaluating model on validation data : ")
-        # validate model for single epoch
-        val_epoch_error, val_epoch_metric = validate_epoch(epoch+1, model, discriminator, val_data, data_iterator_nuts, step_log_interval=10)
+for epoch in range(EPOCH):
 
+    # train model for single epoch
+    model, train_epoch_error, training_step, train_disc_loss, train_fscore = train_epoch(epoch+1, model, discriminator, optimizer, dis_optimizer, train_data, labeldist, data_iterator_nuts,summary_writer,training_step, step_log_interval=10)
 
-        print("*"*55)
-        # get the final log values
-        mean_train_error=np.mean(train_epoch_error).round(PRECISION)
-        mean_val_error=np.mean(val_epoch_error).round(PRECISION)
+    print("\nEvaluating model on validation data : ")
+    # validate model for single epoch
+    val_epoch_error, val_fscore = validate_epoch(epoch+1, model, val_data, data_iterator_nuts, step_log_interval=10)
 
-        mean_train_disc_error=np.mean(train_epoch_disc_error).round(PRECISION)
+    print("*"*65)
 
-        mean_train_metric=np.mean(train_epoch_metric).round(PRECISION)
-        mean_val_metric=np.mean(val_epoch_metric).round(PRECISION)
+    error_hold.append(
+            [EPOCH, np.mean([train_epoch_error]), np.mean([val_epoch_error]),
+             np.std([train_epoch_error]), np.std([val_epoch_error])])
+    
+    # get the final log values
+    mean_train_error=np.mean(train_epoch_error).round(PRECISION)
+    mean_train_disc_loss=np.mean(train_disc_loss).round(PRECISION)
+    mean_train_fscore=np.mean(train_fscore).round(PRECISION)
 
+    mean_val_error=np.mean(val_epoch_error).round(PRECISION)
+    mean_val_fscore=np.mean(val_fscore).round(PRECISION)
 
-        if mean_train_error>10**(-PRECISION):
-            mean_train_error=mean_train_error.round(PRECISION)
-        if mean_train_disc_error>10**(-PRECISION):
-            mean_train_disc_error=mean_train_disc_error.round(PRECISION)            
-        if mean_val_error>10**(-PRECISION):
-            mean_val_error=mean_val_error.round(PRECISION)
+    if mean_train_error>10**(-PRECISION):
+        mean_train_error=mean_train_error.round(PRECISION)
+        mean_train_disc_loss=mean_train_disc_loss.round(PRECISION)
+        mean_train_fscore=mean_train_fscore.round(PRECISION)
 
-        print("Summary:: Epoch : {},  Train errror : {}    Val error : {}\n".format(epoch+1, mean_train_error, mean_val_error))
-        print("Summary:: Epoch : {},  Train discriminator errror : {}\n".format(epoch+1, mean_train_disc_error))
-        print("Summary:: Epoch : {},  Train dice score : {}    Val dice score : {}\n".format(epoch+1, mean_train_metric, mean_val_metric))
+    if mean_val_error>10**(-PRECISION):
+        mean_val_error=mean_val_error.round(PRECISION)
+        mean_val_fscore=mean_val_fscore.round(PRECISION)
 
-        log_scalar(summary_writer, "EPOCH Train Error", mean_train_error, epoch+1)
-        log_scalar(summary_writer, "EPOCH Val Error", mean_val_error, epoch+1)
+    print("Summary: Epoch : {},  Train error : {}, Discriminator error: {}, FScore_train: {}, Val error : {}, FScore_val: {} \n".format\
+          (epoch+1, mean_train_error, mean_train_disc_loss, mean_train_fscore, mean_val_error, mean_val_fscore))
+    # print("Summary: Epoch : {},  Train errror : {}, Val error : {} \n".format\
+    #       (epoch+1, mean_train_error, mean_val_error))
 
-        log_scalar(summary_writer, "EPOCH Train discriminator Error", mean_train_disc_error, epoch+1)
+    log_scalar(summary_writer, "EPOCH Train Error", mean_train_error, epoch+1)
+    log_scalar(summary_writer, "EPOCH Val Error", mean_val_error, epoch+1)
 
-        log_scalar(summary_writer, "EPOCH Train Dice Score", mean_train_metric, epoch+1)
-        log_scalar(summary_writer, "EPOCH Val Dcie Score", mean_val_metric, epoch+1)
-
-
-        # if log value better, save the weight
-        if mean_val_metric>best_metric:
-            weight_path=weight_fol+"/best_weight.h5"
-            model.save_weights(weight_path)
-
-            best_metric=mean_val_metric
-
-        # saving weights each epoch for longer epochs if user wants to
-        weight_path=weight_fol+"/"+"model_ep_{}.h5".format(epoch+1)
+    # if log value better, save the weight
+    if mean_val_error<best_error:
+        weight_path=weight_fol+"/best_weight.h5"
         model.save_weights(weight_path)
+        # model.save(weight_path)
+        best_error=mean_val_error
 
-        with open(r'C:\Users\halay\OneDrive\Desktop\project\training_logs.csv', mode='a') as file:
-            writer = csv.writer(file)
-            writer.writerow([epoch+1, mean_train_disc_error, mean_val_error, mean_train_metric, mean_val_metric])
+    # saving weights each epoch for longer epochs if user wants to
+    weight_path=weight_fol+"/"+"model_ep_{}.h5".format(epoch+1)
+    model.save_weights(weight_path)
+    # model.save(weight_path)
+
+    with open(r'C:\Users\halay\OneDrive\Desktop\project\training_logs.csv', mode='a') as file:
+      writer = csv.writer(file)
+      writer.writerow([epoch+1, mean_train_error, mean_train_disc_loss, mean_train_fscore, mean_val_error, mean_val_fscore])
