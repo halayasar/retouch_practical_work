@@ -36,7 +36,7 @@ loss: ### - f1-score: ###
 Tensorboard logging is performed and the logs are shown below:
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/92387828/226880487-e688b12c-d0fa-40bd-a814-7c4f04be81e3.png" width=35% height=35%>>
+<img src="https://user-images.githubusercontent.com/92387828/226880487-e688b12c-d0fa-40bd-a814-7c4f04be81e3.png" width=55% height=55%>>
 </p>
 
 ### Model outputs 
