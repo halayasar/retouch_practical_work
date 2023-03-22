@@ -8,7 +8,6 @@ This script is run first on the training dataset provided. This script contains 
 The preprocessed data can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
  
 
-#### Utils folder
 ##### custom_nuts.py
 The script consists of two functions: "sample_oct_patch_centers" and "sample_patches_entropy_mask". "sample_oct_patch_centers" takes as input a binary image roimask, a patch shape pshape, the number of positive samples to extract npos, and values to indicate a positive and a negative label, pos and neg respectively. It returns a list of coordinates for npos positive patches that are sampled randomly from roimask.
 
@@ -21,7 +20,6 @@ This script defines several functions to create a data iterator for training the
 
 "get_data_iterator" function creates a data iterator that reads data from a CSV file, stratifies it according to the label distribution, shuffles it, applies various augmentations, randomly crops a patch from each image, preprocesses it, and filters it based on whether it contains any invalid pixels. The build_batch_train function is then used to construct batches of data for training.
 
-### Model_utils folder
 #### Model
 This script defines functions to create an instance of the U-Net model, a convolutional neural network used for image segmentation tasks. The script also defines the architecture of the descriminator to generate a binary classification. 
 
@@ -46,10 +44,8 @@ Tensorboard logging is performed and the logs are shown below:
 The testing script takes in the OCT scan as input and outputs a segmentation mask for the input image. Image overlays are also produced with red color indicating abnormal areas. Some overlays are seen below: 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/92387828/224986209-511d9549-2a92-4469-b555-c13bc44fdc84.PNG" width=30% height=30%> <img src="https://user-images.githubusercontent.com/92387828/224986316-20e40e06-ad22-4e28-b6f6-f47aee5125c8.PNG" width=30% height=30%> <img src="https://user-images.githubusercontent.com/92387828/224986377-0bd3ca42-4483-4fc7-bb22-ae36643023e7.PNG" width=30% height=30%>
+  <img src="https://user-images.githubusercontent.com/92387828/226880487-e688b12c-d0fa-40bd-a814-7c4f04be81e3.png" width=30% height=30%>
 </p>
-
-All predicted outputs can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
 
 ### Results
 The results will be shown later. 
