@@ -44,7 +44,7 @@ Tensorboard logging is performed and the logs are shown below:
 The testing script takes in the OCT scan as input and outputs a segmentation mask for the input image. Image overlays are also produced with red color indicating abnormal areas. Some overlays are seen below: 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/92387828/226880487-e688b12c-d0fa-40bd-a814-7c4f04be81e3.png" width=30% height=30%>
+  <img src="https://user-images.githubusercontent.com/92387828/226881080-e5e0abfc-d5ed-4b46-be9f-5df180652ea1.png" width=30% height=30%>
 </p>
 
 ### Results
