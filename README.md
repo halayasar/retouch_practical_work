@@ -26,9 +26,6 @@ This script defines functions to create an instance of the U-Net model, a convol
 #### loss_functions.py
 This script defines three functions to compute loss functions for a neural network. It defines the Dice loss for binary segmentation tasks. The function calculates true positive, false positive and false negative rates, and returns the Dice loss which is a measure of how similar the predicted segmentation map is to the true segmentation map.
 
-#### train_model.py
-This script carries out training of the model. The training is done for 100 epochs with the FScore (dice index) as a metric. The folder containing all model weights can be found [here](https://drive.google.com/file/d/1zA6AP6OruucBSpQ2Aw7moJIlPpeBWQgE/view?usp=share_link).
-
 ### Model Evaluation
 The best evaluation scores obtained are: (preliminary results, not final)
 loss: ### - f1-score: ###
